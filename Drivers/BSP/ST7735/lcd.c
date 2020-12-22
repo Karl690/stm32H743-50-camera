@@ -57,7 +57,6 @@ void LCD_Test(void)
 	ST7735Ctx.Panel = BOE_Panel;
 	ST7735Ctx.Type = ST7735_1_8_inch_screen;
 	#else
-	//error "Unknown Screen"
 	printf("Unknown Screen");
 	
 	#endif
@@ -93,22 +92,6 @@ void LCD_Test(void)
 		else if (get_tick() - tick > timeout)
 			break;
 	}
-	/*
-	while (HAL_GPIO_ReadPin(KEY_GPIO_Port, KEY_Pin) == GPIO_PIN_SET)
-	{
-		delay_ms(10);
-	}
-	LCD_Light(0, 300);
-
-	ST7735_LCD_Driver.FillRect(&st7735_pObj, 0, 0, ST7735Ctx.Width,ST7735Ctx.Height, RED);
-
-	sprintf((char *)&text, "WeAct Studio");
-	LCD_ShowString(4, 4, ST7735Ctx.Width, 16, 16, text);
-	sprintf((char *)&text, "STM32H7xx 0x%X", HAL_GetDEVID());
-	LCD_ShowString(4, 22, ST7735Ctx.Width, 16, 16, text);
-	sprintf((char *)&text, "LCD ID:0x%X", st7735_id);
-	LCD_ShowString(4, 40, ST7735Ctx.Width, 16, 16, text);
-	*/
 	LCD_Light(600, 300);
 }
 

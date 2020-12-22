@@ -4,8 +4,6 @@
 #include "ov2640.h"
 #include "ov7725.h"
 #include "ov5640.h"
-#include "lcd.h"
-#define USE_LCD 1
 
 Camera_HandleTypeDef hcamera;
 // Resolution table
