@@ -24,14 +24,16 @@
 #include "i2c.h"
 #include "spi.h"
 #include "tim.h"
+#include "usb_device.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "camera.h"
 #include "lcd.h"
+#include "lcd_draw.h"
 /* USER CODE END Includes */
-#define TFT96
+
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
@@ -55,6 +57,7 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
+#define TFT96
 #ifdef TFT96
 // QQVGA
 #define FrameWidth 160
@@ -183,9 +186,11 @@ int main(void)
   MX_I2C1_Init();
   MX_SPI4_Init();
   MX_TIM1_Init();
+  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
-  uint8_t text[20];
-	
+  uint8_t text[2048] = {0};
+  uint16_t pic_prevframe[FrameHeight][FrameWidth] = {0};
+  uint8_t pic_diff[FrameHeight][FrameWidth] = {0};
   LCD_Test();
 
   //	HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_1);
@@ -203,6 +208,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+	uint8_t IsFirst = 1;
   while (1)
   {
     /* USER CODE END WHILE */
@@ -210,16 +216,19 @@ int main(void)
     /* USER CODE BEGIN 3 */
     if (DCMI_FrameIsReady)
     {
-      DCMI_FrameIsReady = 0;
-			
-#ifdef TFT96
-		ST7735_FillRGBRect(&st7735_pObj,0,0,(uint8_t *)&pic[20][0], ST7735Ctx.Width, 80);
-#elif TFT18
-		ST7735_FillRGBRect(&st7735_pObj,0,0,(uint8_t *)&pic[0][0], ST7735Ctx.Width, ST7735Ctx.Height);
-#endif
-		sprintf((char *)&text,"%dFPS",Camera_FPS);
-		LCD_ShowString(5,5,60,16,12,text);
-			
+    	DCMI_FrameIsReady = 0;
+
+		if(IsFirst == 0){
+			detect_line(&pic[0][0], &pic_prevframe[0][0], &pic_diff[0][0], ST7735Ctx.Width, 80);
+			//draw_grayscale_frame(&st7735_pObj,0,0,(uint8_t*)&pic_diff[0][0], ST7735Ctx.Width, 80,1);
+			draw_grayscale_frame(&st7735_pObj,0,0,&pic_diff[0][0], ST7735Ctx.Width, 80,1);
+		}
+		else {
+			IsFirst = 0;
+			draw_rgb565_frame(&st7735_pObj,0,0,(uint8_t*)&pic[0][0], ST7735Ctx.Width, 80,1);
+		}
+
+		copy_to_rgb565(&pic[0][0], &pic_prevframe[0][0], ST7735Ctx.Width, 80);
 		LED_Blink(1, 1);
     }
     // HAL_PWR_EnterSLEEPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
@@ -242,7 +251,7 @@ void SystemClock_Config(void)
   HAL_PWREx_ConfigSupply(PWR_LDO_SUPPLY);
   /** Configure the main internal regulator output voltage
   */
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
 
   while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
   /** Initializes the RCC Oscillators according to the specified parameters
@@ -282,14 +291,19 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI4|RCC_PERIPHCLK_I2C1;
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI4|RCC_PERIPHCLK_I2C1
+                              |RCC_PERIPHCLK_USB;
   PeriphClkInitStruct.Spi45ClockSelection = RCC_SPI45CLKSOURCE_D2PCLK1;
   PeriphClkInitStruct.I2c123ClockSelection = RCC_I2C123CLKSOURCE_D2PCLK1;
+  PeriphClkInitStruct.UsbClockSelection = RCC_USBCLKSOURCE_HSI48;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
     Error_Handler();
   }
   HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSI48, RCC_MCODIV_4);
+  /** Enable USB Voltage detector
+  */
+  HAL_PWREx_EnableUSBVoltageDetector();
 }
 
 /* USER CODE BEGIN 4 */

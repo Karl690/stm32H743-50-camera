@@ -676,61 +676,6 @@ int32_t ST7735_DrawBitmap(ST7735_Object_t *pObj, uint32_t Xpos, uint32_t Ypos, u
   return ret;
 }
 
-int32_t ST7735_DrawFrame(ST7735_Object_t *pObj, uint32_t Xpos, uint32_t Ypos, uint8_t *pData, uint32_t Width, uint32_t Height, uint8_t IsAxis) {
-	int32_t ret = ST7735_OK;
-	  static uint8_t pdata[640];
-	  uint8_t *pixel = pData;
-	  uint32_t i, j;
-
-	  if(((Xpos + Width) > ST7735Ctx.Width) || ((Ypos + Height) > ST7735Ctx.Height))
-	  {
-	    ret = ST7735_ERROR;
-	  }/* Set Cursor */
-	  else
-	  {
-	    for(j = 0; j < Height; j++)
-	    {
-
-	      if(ST7735_SetCursor(pObj, Xpos, Ypos+j) != ST7735_OK)
-	      {
-	        ret = ST7735_ERROR;
-	      }
-	      else
-	      {
-	        for(i = 0; i < Width; i++)
-	        {
-	        	if(IsAxis == 1 && (i == Width /2 || j == Height/2)) {
-	        		pdata[2U*i] = 0x07;
-	        		pdata[2U*i+1U] = 0xE0;
-	        	}
-	        	else {
-#ifdef _RGB565
-	        		uint8_t* pixel = &pData[(Height-j-1)*Width*2U + (Width - i-1) * 2U];
-	        		uint16_t u1 = (uint16_t)(*pixel);
-	        		uint16_t u2 = (uint16_t)(*(pixel+1));
-	        		uint16_t rgb565 = (uint16_t)((u1<<8) + u2);
-	        		uint8_t g = convertRGB565toGray(rgb565); //*pixel
-
-#else
-	        		uint8_t g = pData[(Height-j-1)*Width*1U + (Width - i-1) * 1U];
-#endif
-	        		uint16_t p = convertGrayToRGB565(g);
-	        		pdata[2U*i] = (uint8_t)(p & 0xFF);
-					pdata[(2U*i) + 1U] = (uint8_t)((p >> 8) & 0xFF);
-
-
-	        	}
-	        	pixel +=2;
-	        }
-	        if(st7735_send_data(&pObj->Ctx, (uint8_t*)&pdata[0], 2U*Width) != ST7735_OK)
-	        {
-	          ret = ST7735_ERROR;
-	        }
-	      }
-	    }
-	  }
-	return ret;
-}
 /**
   * @brief  Draws a full RGB rectangle
   * @param  pObj Component object

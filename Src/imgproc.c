@@ -1,5 +1,6 @@
 #include "imgproc.h"
-
+#include "color.h"
+#include <math.h>
 void convertImageFormatRGB565ToGray(uint16_t* org, uint8_t* target, int width, int height){
 	for(int i = 0; i < height; i ++) {
 		for(int j = 0; j < width; j ++){
@@ -69,16 +70,40 @@ void threshold(uint8_t* img, uint8_t threshold) {
 
 }
 
-void copy_to(uint8_t* in, uint8_t* out, uint16_t width, uint16_t height) {
+void copy_to_gray(uint8_t* in, uint8_t* out, uint16_t width, uint16_t height) {
 	memcpy(out, in, sizeof(uint8_t) * width * height);
+}
+void copy_to_rgb565(uint16_t* in, uint16_t* out, uint16_t width, uint16_t height) {
+	memcpy(out, in, sizeof(uint16_t) * width * height);
 }
 void extract_background(uint16_t* inframe, uint8_t* backgroundframe, uint8_t* outframe, uint16_t width, uint16_t height)
 {
 	//uint8_t tmpbuf[160][120] = {0};
 	convertImageFormatRGB565ToGray(inframe, outframe, width, height);
-	median_filter(outframe, width, height, 3);
+	//median_filter(outframe, width, height, 3);
 
 	//memcpy(&backgroundpic[0][0], &pic[0][0], sizeof(uint16_t) * width*height);
 	//memset(binarybuffer, 0, sizeof(uint16_t) * width*height);
 
+}
+
+void detect_line(uint16_t* current_frame, uint16_t* prev_frame, uint8_t* diff_frame, const uint16_t width, const uint16_t height) {
+	uint8_t threshold = 50;
+	for(uint16_t i = 0; i < height; i ++ ) {
+		for(uint16_t j = 0; j < width; j ++ ) {
+			HSV hsv1 = {0}, hsv2 = {0};
+			RGB565ToHSV(current_frame[i * width+j], &hsv1);
+			RGB565ToHSV(prev_frame[i* width+j], &hsv2);
+			uint8_t g = RGB565toGray(current_frame[i * width+j]);
+			uint8_t g1 = RGB565toGray(current_frame[i * width+j]);
+			uint8_t g2 = RGB565toGray(prev_frame[i* width+j]);
+			uint16_t diff = (uint16_t)abs(g1- g2);
+			//uint16_t diff = hsv1.s;
+			if(diff < threshold) {
+				diff_frame[i*width + j] = 255;
+			}else {
+				diff_frame[i*width + j] = 0;
+			}
+		}
+	}
 }

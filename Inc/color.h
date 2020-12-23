@@ -32,10 +32,14 @@ enum COLOR_FORMAT{
 	COLOR_RGB565,
 };
 
-uint32_t convertRGB565ToRGB88(uint16_t rgb565);
-uint16_t convertRGB888ToRGB565(uint32_t rgb888);
-uint8_t convertRGB565toGray(uint16_t rgb565);
-uint16_t convertGrayToRGB565(uint8_t gray);
+typedef struct _HSV{
+	uint16_t h, s, v;
+}HSV, *LPHSV;
+uint32_t RGB565ToRGB888(uint16_t rgb565);
+uint16_t RGB888ToRGB565(uint32_t rgb888);
+uint8_t RGB565toGray(uint16_t rgb565);
+uint16_t GrayToRGB565(uint8_t gray);
+void RGB565ToHSV(uint16_t rgb565, HSV *hsv);
 
 
 /* USER CODE BEGIN Prototypes */
