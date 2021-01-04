@@ -1,6 +1,7 @@
 #include "imgproc.h"
 #include "color.h"
 #include <math.h>
+#define MARK_COLOR 0x9f05
 void convertImageFormatRGB565ToGray(uint16_t* org, uint8_t* target, int width, int height){
 	for(int i = 0; i < height; i ++) {
 		for(int j = 0; j < width; j ++){
@@ -58,9 +59,8 @@ void median_filter(uint8_t* img, uint16_t width, uint16_t height, const uint8_t 
 
 			for(int8_t m = -p, s = 0; m <= p; m ++, s ++) {
 				for(int8_t n = -p, q = 0; n <= p; n ++, q ++){
-					sum += kernel[s][q] * img[(i + m) *width + (j+n)];
+					sum += kernel[s][q] * img[(i + m) * width + (j+n)];
 				}
-
 			}
 			img[i * width + j] = (uint8_t)sum;
 		}
@@ -87,23 +87,43 @@ void extract_background(uint16_t* inframe, uint8_t* backgroundframe, uint8_t* ou
 
 }
 
-void detect_line(uint16_t* current_frame, uint16_t* prev_frame, uint8_t* diff_frame, const uint16_t width, const uint16_t height) {
-	uint8_t threshold = 50;
+int detect_line(uint16_t* current_frame, uint16_t* prev_frame, uint16_t* diff_frame, const uint16_t width, const uint16_t height)
+{
+	uint8_t threshold = 10;
 	for(uint16_t i = 0; i < height; i ++ ) {
 		for(uint16_t j = 0; j < width; j ++ ) {
-			HSV hsv1 = {0}, hsv2 = {0};
-			RGB565ToHSV(current_frame[i * width+j], &hsv1);
-			RGB565ToHSV(prev_frame[i* width+j], &hsv2);
-			uint8_t g = RGB565toGray(current_frame[i * width+j]);
+			HSV hsv = {0};
+			RGB565ToHSV(current_frame[i * width+j], &hsv);
 			uint8_t g1 = RGB565toGray(current_frame[i * width+j]);
 			uint8_t g2 = RGB565toGray(prev_frame[i* width+j]);
 			uint16_t diff = (uint16_t)abs(g1- g2);
-			//uint16_t diff = hsv1.s;
-			if(diff < threshold) {
-				diff_frame[i*width + j] = 255;
+			if(diff > threshold) {
+				if((hsv.h < 10 || hsv.h > 340) && hsv.s > 70) {
+					diff_frame[i * width + j] = MARK_COLOR;
+				}else {
+					diff_frame[i * width + j] = current_frame[i*width+j];
+				}
 			}else {
-				diff_frame[i*width + j] = 0;
+				diff_frame[i * width + j] = current_frame[i * width+j];
 			}
 		}
 	}
+	int p[width];
+	int max_sum = 0;
+	int max_pos = 0;
+	for(uint16_t i = 0; i < width; i ++) {
+		int sum = 0;
+		for(uint16_t j = 0; j < height; j ++ ) {
+			if(diff_frame[j * width + i] == MARK_COLOR)
+				sum ++;
+		}
+		p[i] = sum;
+		if(max_sum < sum) {
+			max_sum = sum;
+			max_pos = i;
+		}
+	}
+
+	if(max_sum < height /2) max_pos = 0;
+	return max_pos;
 }

@@ -180,10 +180,8 @@ static int8_t CDC_DeInit_FS(void)
   */
 static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
 {
-	static uint8_t lineCoding[7] // <------- add these three lines
-	// 115200bps, 1stop, no parity, 8bit
-	= {0x00, 0xC2, 0x01, 0x00, 0x00, 0x00, 0x08};
   /* USER CODE BEGIN 5 */
+	uint8_t lineCoding[7] = {0};
   switch(cmd)
   {
     case CDC_SEND_ENCAPSULATED_COMMAND:
@@ -268,9 +266,12 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
   /* USER CODE BEGIN 6 */
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+  command_vcp_process(Buf, *Len);
   return (USBD_OK);
   /* USER CODE END 6 */
 }
+
+
 
 /**
   * @brief  CDC_Transmit_FS
@@ -322,6 +323,30 @@ static int8_t CDC_TransmitCplt_FS(uint8_t *Buf, uint32_t *Len, uint8_t epnum)
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */
 
+uint16_t analysis_packet(uint8_t* buf) {
+	uint16_t pos = 0;
+	for(;;) {
+		if(buf[pos] == '\0') {
+			break;
+		}
+		pos ++;
+	}
+	return pos;
+}
+uint16_t ReceivePacketFromVCP(uint8_t* buf, uint16_t len) {
+	//USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &buf[0]);
+	uint8_t status = USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+	if(status == USBD_OK) {
+		if(UserRxBufferFS[0]!= '\0') {
+			memcpy(buf,UserRxBufferFS,APP_RX_DATA_SIZE);
+			uint16_t real_len = analysis_packet(buf);
+			memset(UserRxBufferFS, 0, APP_RX_DATA_SIZE);
+			return real_len;
+		}
+
+	}
+	return 0;
+}
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 
 /**

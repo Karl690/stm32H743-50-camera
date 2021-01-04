@@ -1,4 +1,8 @@
+#include "constant.h"
+#include "lcd.h"
+
 #include "lcd_draw.h"
+
 
 void draw_grayscale_frame(ST7735_Object_t *pObj, uint32_t Xpos, uint32_t Ypos, uint8_t *pData, uint32_t Width, uint32_t Height, uint8_t IsAxis){
 	int32_t ret = ST7735_OK;

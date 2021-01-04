@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 #include "dcmi.h"
 #include "dma.h"
 #include "i2c.h"
@@ -29,9 +30,12 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "constant.h"
+#include "vcp.h"
 #include "camera.h"
 #include "lcd.h"
 #include "lcd_draw.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,21 +60,19 @@
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
-#define TFT96
-#ifdef TFT96
-// QQVGA
-#define FrameWidth 160
-#define FrameHeight 120
-#elif TFT18
-// QQVGA2
-#define FrameWidth 128
-#define FrameHeight 160
-#endif
 // picture buffer
-uint16_t pic[FrameWidth][FrameHeight];
+uint16_t DCMI_BUF[FRAME_HEIGHT][FRAME_WIDTH] = {0};
+uint8_t COMM_RECV_BUF[MAX_BUF_SIZE] = {0};
+uint8_t COMM_TRANS_BUF[MAX_BUF_SIZE] = {0};
 uint32_t DCMI_FrameIsReady;
 uint32_t Camera_FPS=0;
+uint8_t LCD_log_text[30]  = {0};
+//The variables for Drawing
+
+uint8_t IsDrawingAxis = 1;
+uint8_t IsLiveStream = 1;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -156,10 +158,10 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
 #ifdef W25Qxx
-  SCB->VTOR = QSPI_BASE;
+	SCB->VTOR = QSPI_BASE;
 #endif
-  MPU_Config();
-  CPU_CACHE_Enable();
+	MPU_Config();
+	CPU_CACHE_Enable();
 
   /* USER CODE END 1 */
 
@@ -188,52 +190,70 @@ int main(void)
   MX_TIM1_Init();
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
-  uint8_t text[2048] = {0};
-  uint16_t pic_prevframe[FrameHeight][FrameWidth] = {0};
-  uint8_t pic_diff[FrameHeight][FrameWidth] = {0};
-  LCD_Test();
-
-  //	HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_1);
-  //	HAL_Delay(10);
-#ifdef TFT96
-	Camera_Init_Device(&hi2c1, FRAMESIZE_QQVGA);
-#elif TFT18
-	Camera_Init_Device(&hi2c1, FRAMESIZE_QQVGA2);
-#endif
-	//clean Ypos 58
-	ST7735_LCD_Driver.FillRect(&st7735_pObj, 0, 58, ST7735Ctx.Width, 16, BLACK);
-	HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_CONTINUOUS, (uint32_t)&pic, FrameWidth * FrameHeight * 2 / 4);
 
   /* USER CODE END 2 */
 
+  /* Init scheduler */
+  osKernelInitialize();  /* Call init function for freertos objects (in freertos.c) */
+  MX_FREERTOS_Init();
+  /* Start scheduler */
+  osKernelStart();
+#ifdef _A_
+  Camera_Init_Device(&hi2c1, FRAMESIZE_QQVGA);
+  /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  ST7735_LCD_Driver.FillRect(&st7735_pObj, 0, 58, ST7735Ctx.Width, 16, BLACK);
+
 	uint8_t IsFirst = 1;
-  while (1)
-  {
+	int IsLineAppeared = 0;
+	int xpos = 0;
+	while (1)
+	{
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    if (DCMI_FrameIsReady)
-    {
-    	DCMI_FrameIsReady = 0;
-
-		if(IsFirst == 0){
-			detect_line(&pic[0][0], &pic_prevframe[0][0], &pic_diff[0][0], ST7735Ctx.Width, 80);
+		if (DCMI_FrameIsReady)
+		{
+			DCMI_FrameIsReady = 0;
+#ifdef _DIFF_PROCESS_
+			if(IsFirst == 0){
+				int pos = detect_line(&DCMI_BUF[0][0], &DCMI_PREV_FRAME[0][0], &DCMI_RESULT_FRAME[0][0], ST7735Ctx.Width, 80);
+				if(pos > 0 && !IsLineAppeared) {
+					xpos = pos;
+					IsLineAppeared = 1;
+				}else if(pos == 0){
+					IsLineAppeared = 0;
+				}
 			//draw_grayscale_frame(&st7735_pObj,0,0,(uint8_t*)&pic_diff[0][0], ST7735Ctx.Width, 80,1);
-			draw_grayscale_frame(&st7735_pObj,0,0,&pic_diff[0][0], ST7735Ctx.Width, 80,1);
-		}
-		else {
-			IsFirst = 0;
-			draw_rgb565_frame(&st7735_pObj,0,0,(uint8_t*)&pic[0][0], ST7735Ctx.Width, 80,1);
-		}
+				draw_rgb565_frame(&st7735_pObj,0,0,&DCMI_BUF[0][0], ST7735Ctx.Width, 80,1);
+				if(xpos > 0)
+					ST7735_DrawVLine(&st7735_pObj, xpos, 0, 80, 0x1CF8);
 
-		copy_to_rgb565(&pic[0][0], &pic_prevframe[0][0], ST7735Ctx.Width, 80);
-		LED_Blink(1, 1);
-    }
-    // HAL_PWR_EnterSLEEPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
-  }
+			}
+			else
+#endif
+			{
+				//IsFirst = 0;
+				draw_rgb565_frame(&st7735_pObj,0,0,(uint8_t*)&DCMI_BUF[0][0], ST7735Ctx.Width, 80,1);
+			}
+
+			//copy_to_rgb565(&DCMI_BUF[0][0], &pic_prevframe[0][0], ST7735Ctx.Width, 80);
+			//sprintf(COMM_TRANS_BUF, "Camera Size = %d\n", ST7735Ctx.Width);
+			//CDC_Transmit_FS(COMM_TRANS_BUF, sizeof(COMM_TRANS_BUF));
+			uint16_t len =USBCOM_Receive_FS(COMM_RECV_BUF, MAX_BUF_SIZE);
+			if(len > 0) {
+				LCD_ShowString(10, 1, ST7735Ctx.Width, 16, 16, COMM_RECV_BUF);
+				CDC_Transmit_FS(COMM_RECV_BUF, len);
+			}else {
+
+			}
+			LED_Blink(1, 1);
+		}
+		// HAL_PWR_EnterSLEEPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+	}
   /* USER CODE END 3 */
+#endif
 }
 
 /**
@@ -311,7 +331,6 @@ void SystemClock_Config(void)
 void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi)
 {
 	static uint32_t count = 0,tick = 0;
-	
 	if(HAL_GetTick() - tick >= 1000)
 	{
 		tick = HAL_GetTick();
@@ -320,7 +339,7 @@ void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi)
 	}
 	count ++;
 	
-  DCMI_FrameIsReady = 1;
+	DCMI_FrameIsReady = 1;
 }
 
 /* USER CODE END 4 */

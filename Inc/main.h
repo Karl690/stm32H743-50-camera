@@ -23,6 +23,7 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -30,6 +31,8 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32h7xx_hal.h"
 #include "stm32h7xx_hal.h"
+
+
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */

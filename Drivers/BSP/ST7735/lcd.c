@@ -2,7 +2,7 @@
 #include "font.h"
 #include "spi.h"
 #include "tim.h"
-
+#include "constant.h"
 //SPI��ʾ���ӿ�
 #define TFT96
 //LCD_RST
@@ -44,55 +44,30 @@ ST7735_IO_t st7735_pIO = {
 ST7735_Object_t st7735_pObj;
 uint32_t st7735_id;
 
-void LCD_Test(void)
+void LCD_Init(void)
 {
-	uint8_t text[20];
-	
-	#ifdef TFT96
 	ST7735Ctx.Orientation = ST7735_ORIENTATION_LANDSCAPE_ROT180;
 	ST7735Ctx.Panel = HannStar_Panel;
 	ST7735Ctx.Type = ST7735_0_9_inch_screen;
-	#elif TFT18
-	ST7735Ctx.Orientation = ST7735_ORIENTATION_PORTRAIT;
-	ST7735Ctx.Panel = BOE_Panel;
-	ST7735Ctx.Type = ST7735_1_8_inch_screen;
-	#else
-	printf("Unknown Screen");
-	
-	#endif
 	
 	ST7735_RegisterBusIO(&st7735_pObj,&st7735_pIO);
 	ST7735_LCD_Driver.Init(&st7735_pObj,ST7735_FORMAT_RBG565,&ST7735Ctx);
 	ST7735_LCD_Driver.ReadID(&st7735_pObj,&st7735_id);
 	
 	LCD_SetBrightness(0);
+	LCD_Logo();
+	uint8_t text[20] = {0};
+	sprintf((char *)&text, "%s[%s]", REVISION_ID, REVISION_DATE);
+	LCD_ShowString(ST7735Ctx.Width - 140, 60, ST7735Ctx.Width, 16, 16, text);
+	LCD_Light(600, 300);
+}
 
-	#ifdef TFT96
-	//extern unsigned char WeActStudiologo_160_80[];
+
+void LCD_Logo(void) {
 	extern unsigned char Hyrel3Dlogo_160_80[];
 	ST7735_LCD_Driver.DrawBitmap(&st7735_pObj,0,0,Hyrel3Dlogo_160_80);
-	#elif TFT18
-	extern unsigned char WeActStudiologo_128_160[];
-	ST7735_LCD_Driver.DrawBitmap(&st7735_pObj,0,0,WeActStudiologo_128_160);	
-	#endif
-	int timeout = 2000;
-	uint32_t tick = get_tick();
-	while (HAL_GPIO_ReadPin(KEY_GPIO_Port, KEY_Pin) != GPIO_PIN_SET)
-	{
-		delay_ms(10);
 
-		if (get_tick() - tick <= 1000)
-			LCD_SetBrightness((get_tick() - tick) * 100 / 1000);
-		else if (get_tick() - tick <= timeout)
-		{
-			sprintf((char *)&text, "%03d", (get_tick() - tick - 1000) / 10);
-			LCD_ShowString(ST7735Ctx.Width - 30, 1, ST7735Ctx.Width, 16, 16, text);
-			ST7735_LCD_Driver.FillRect(&st7735_pObj, 0, ST7735Ctx.Height - 3, (get_tick() - tick - 1000) * ST7735Ctx.Width / (timeout-1000), 3, 0xFFFF);
-		}
-		else if (get_tick() - tick > timeout)
-			break;
-	}
-	LCD_Light(600, 300);
+	//
 }
 
 static uint32_t LCD_LightSet;
