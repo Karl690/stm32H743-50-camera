@@ -1,5 +1,6 @@
 #include "constant.h"
 #include "command.h"
+#include "systeminfo.h"
 #include "vcp.h"
 void command_vcp_process(uint8_t* buf, uint16_t len) {
 	extern uint8_t LCD_log_text[30];
@@ -9,8 +10,7 @@ void command_vcp_process(uint8_t* buf, uint16_t len) {
 		extern uint8_t IsLiveStream;
 		switch(buf[0]) {
 		case PING_CHAR:
-			CDC_Transmit_FS(buf, len);
-			sprintf(LCD_log_text, "PING REQUEST");
+			sendRevisionString("PingReply");
 			break;
 		case AXIS_VISIBLE_CHAR:
 			IsDrawingAxis = 1;
@@ -39,6 +39,18 @@ void command_vcp_process(uint8_t* buf, uint16_t len) {
 		CDC_Transmit_FS(buf, len);
 	}
 
+}
+
+void pingReply (void){
+	sendRevisionString("PingReply");
+}
+
+void sendRevisionString(char *reason){
+	extern SYSTEMINFO SystemInfo;
+	uint8_t trans_buffer[100] = {0};
+	trans_buffer[0] = PING_CHAR;
+	sprintf(trans_buffer+1, ">Hy: %s :\nsw %d.%03d :mcu 0x%03x 0x%04x", reason, SystemInfo.softwareMajorVersion, SystemInfo.softwareMinorVersion, SystemInfo.mcuDeviceID, SystemInfo.mcuRevisionID);
+	CDC_Transmit_FS(trans_buffer, strlen(trans_buffer));
 }
 
 

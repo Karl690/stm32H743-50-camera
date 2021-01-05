@@ -3,6 +3,8 @@
 #include "spi.h"
 #include "tim.h"
 #include "constant.h"
+#include "systeminfo.h"
+
 //SPI��ʾ���ӿ�
 #define TFT96
 //LCD_RST
@@ -57,7 +59,8 @@ void LCD_Init(void)
 	LCD_SetBrightness(0);
 	LCD_Logo();
 	uint8_t text[20] = {0};
-	sprintf((char *)&text, "%s[%s]", REVISION_ID, REVISION_DATE);
+	extern SYSTEMINFO SystemInfo;
+	sprintf((char *)&text, "%d.%d[%s]", SystemInfo.softwareMajorVersion, SystemInfo.softwareMinorVersion, SystemInfo.softwareUpdateDate);
 	LCD_ShowString(ST7735Ctx.Width - 140, 60, ST7735Ctx.Width, 16, 16, text);
 	LCD_Light(600, 300);
 }

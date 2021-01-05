@@ -1,7 +1,6 @@
 #include "camera.h"
 
-#define REVISION_ID			"1.001"
-#define REVISION_DATE		"01/03/2021"
+
 #define MAX_BUF_SIZE 		2048
 
 #define FRAME_WIDTH 		320

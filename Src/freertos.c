@@ -57,14 +57,14 @@
 osThreadId_t DisplayLCDThreaHandle;
 const osThreadAttr_t DisplayLCDThrea_attributes = {
   .name = "DisplayLCDThrea",
-  .priority = (osPriority_t) osPriorityBelowNormal,
+  .priority = (osPriority_t) osPriorityAboveNormal1,
   .stack_size = 128 * 4
 };
 /* Definitions for QueryVCPThread */
 osThreadId_t QueryVCPThreadHandle;
 const osThreadAttr_t QueryVCPThread_attributes = {
   .name = "QueryVCPThread",
-  .priority = (osPriority_t) osPriorityBelowNormal,
+  .priority = (osPriority_t) osPriorityAboveNormal2,
   .stack_size = 128 * 4
 };
 
@@ -110,7 +110,7 @@ void MX_FREERTOS_Init(void) {
   DisplayLCDThreaHandle = osThreadNew(StartDisplayLCDThread, NULL, &DisplayLCDThrea_attributes);
 
   /* creation of QueryVCPThread */
-  QueryVCPThreadHandle = osThreadNew(StartQueryVCPThread, NULL, &QueryVCPThread_attributes);
+  //QueryVCPThreadHandle = osThreadNew(StartQueryVCPThread, NULL, &QueryVCPThread_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */

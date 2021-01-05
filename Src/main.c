@@ -31,6 +31,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "constant.h"
+#include "systeminfo.h"
 #include "vcp.h"
 #include "camera.h"
 #include "lcd.h"
@@ -63,6 +64,8 @@ void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
 // picture buffer
+SYSTEMINFO SystemInfo = {0};
+
 uint16_t DCMI_BUF[FRAME_HEIGHT][FRAME_WIDTH] = {0};
 uint8_t COMM_RECV_BUF[MAX_BUF_SIZE] = {0};
 uint8_t COMM_TRANS_BUF[MAX_BUF_SIZE] = {0};
@@ -189,7 +192,13 @@ int main(void)
   MX_SPI4_Init();
   MX_TIM1_Init();
   MX_USB_DEVICE_Init();
-  /* USER CODE BEGIN 2 */
+  /* USER CODE BEGIN 2*/
+  SystemInfo.softwareMajorVersion = SOFTWARE_MAJOR_REVISION;
+  SystemInfo.softwareMinorVersion = SOFTWARE_MINOR_REVISION;
+  strcpy(SystemInfo.softwareUpdateDate, SOFTWARE_UPDATE_DATE);
+  SystemInfo.mcuVersion = HAL_GetHalVersion();
+  SystemInfo.mcuDeviceID = HAL_GetDEVID();
+  SystemInfo.mcuRevisionID = HAL_GetREVID();
 
   /* USER CODE END 2 */
 
