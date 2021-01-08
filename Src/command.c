@@ -48,8 +48,8 @@ void pingReply (void){
 void sendRevisionString(char *reason){
 	extern SYSTEMINFO SystemInfo;
 	uint8_t trans_buffer[100] = {0};
-	trans_buffer[0] = PING_CHAR;
-	sprintf(trans_buffer+1, ">Hy: %s :\nsw %d.%03d :mcu 0x%03x 0x%04x", reason, SystemInfo.softwareMajorVersion, SystemInfo.softwareMinorVersion, SystemInfo.mcuDeviceID, SystemInfo.mcuRevisionID);
+	//trans_buffer[0] = PING_CHAR;
+	sprintf(trans_buffer, ">Hy: %s :HYCAM sw %d.%03d :mcu 0x%03x 0x%04x", reason, SystemInfo.softwareMajorVersion, SystemInfo.softwareMinorVersion, SystemInfo.mcuDeviceID, SystemInfo.mcuRevisionID);
 	CDC_Transmit_FS(trans_buffer, strlen(trans_buffer));
 }
 

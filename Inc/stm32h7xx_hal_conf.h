@@ -35,7 +35,7 @@
 #define HAL_MODULE_ENABLED
 
   /* #define HAL_ADC_MODULE_ENABLED   */
-/* #define HAL_FDCAN_MODULE_ENABLED   */
+#define HAL_FDCAN_MODULE_ENABLED
 /* #define HAL_FMAC_MODULE_ENABLED   */
 /* #define HAL_CEC_MODULE_ENABLED   */
 /* #define HAL_COMP_MODULE_ENABLED   */
@@ -164,7 +164,7 @@
   * @brief This is the HAL system configuration section
   */
 #define  VDD_VALUE                    ((uint32_t)3300U) /*!< Value of VDD in mv */
-#define  TICK_INT_PRIORITY            ((uint32_t)15U) /*!< tick interrupt priority */
+#define  TICK_INT_PRIORITY            ((uint32_t)0U) /*!< tick interrupt priority */
 #define  USE_RTOS                     0U
 #define  USE_SD_TRANSCEIVER           0U               /*!< use uSD Transceiver */
 #define  USE_SPI_CRC	              0U               /*!< use CRC in SPI */

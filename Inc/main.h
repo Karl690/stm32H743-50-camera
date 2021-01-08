@@ -23,7 +23,6 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,8 +30,6 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32h7xx_hal.h"
 #include "stm32h7xx_hal.h"
-
-
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -66,6 +63,10 @@ void Error_Handler(void);
 #define PE3_GPIO_Port GPIOE
 #define KEY_Pin GPIO_PIN_13
 #define KEY_GPIO_Port GPIOC
+#define LED_GREEN_Pin GPIO_PIN_0
+#define LED_GREEN_GPIO_Port GPIOA
+#define LED_RED_Pin GPIO_PIN_0
+#define LED_RED_GPIO_Port GPIOB
 #define LCD_CS_Pin GPIO_PIN_11
 #define LCD_CS_GPIO_Port GPIOE
 #define LCD_WR_RS_Pin GPIO_PIN_13
