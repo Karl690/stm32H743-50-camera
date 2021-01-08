@@ -142,13 +142,6 @@ static void CPU_CACHE_Enable(void)
   SCB_EnableDCache();
 }
 
-void LED_Blink(uint32_t Hdelay, uint32_t Ldelay)
-{
-  HAL_GPIO_WritePin(PE3_GPIO_Port, PE3_Pin, GPIO_PIN_SET);
-  HAL_Delay(Hdelay - 1);
-  HAL_GPIO_WritePin(PE3_GPIO_Port, PE3_Pin, GPIO_PIN_RESET);
-  HAL_Delay(Ldelay - 1);
-}
 /* USER CODE END 0 */
 
 /**
@@ -226,7 +219,7 @@ int main(void)
       	DCMI_FrameIsReady = 0;
 
   		draw_rgb565_frame(&st7735_pObj,0,0,(uint8_t*)&DCMI_BUF[0][0], ST7735Ctx.Width, 80,1);
-  		LED_Blink(1, 1);
+
       }
       // HAL_PWR_EnterSLEEPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
     }
@@ -332,7 +325,7 @@ void Error_Handler(void)
   /* User can add his own implementation to report the HAL error return state */
   while (1)
   {
-    LED_Blink(5, 250);
+
   }
   /* USER CODE END Error_Handler_Debug */
 }

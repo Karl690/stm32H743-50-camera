@@ -90,7 +90,7 @@ void OhNoMrBill(void)
 	// XXXX should send an ERROR .... should never get here
 }
 void BlinkLed(void){
-	TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
+	TogglePin(PE3_HeartbeatLed_GPIO_Port, PE3_HeartbeatLed_Pin);
 }
 ////////////////////////////////////////////////////////////////////////////////
 
